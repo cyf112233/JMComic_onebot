@@ -1,6 +1,6 @@
 # 管理员配置
 admin:
-  qq_numbers: [1450595984]  # 管理员QQ号列表
+  qq_numbers: [12345678]  # 管理员QQ号列表
 
 # 下载配置
 download:
