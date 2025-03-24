@@ -14,3 +14,5 @@ onebot v11 协议
 https://github.com/botuniverse/onebot-11
 
 你可以用napcat等支持websocket的onebot服务端工具来连接使用
+
+虽然做的是一坨，但好歹能用不是（
