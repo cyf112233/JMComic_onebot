@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cd jm_bot
 # 检查Python是否安装
 if ! command -v python3 &> /dev/null; then
     echo "未找到Python3，请先安装Python3"
@@ -27,4 +27,4 @@ pip install -r requirements.txt
 
 # 启动机器人
 echo "正在启动机器人..."
-python3 jm_bot/bot.py 
+python3 bot.py 
