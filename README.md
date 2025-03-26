@@ -15,4 +15,6 @@ https://github.com/botuniverse/onebot-11
 
 你可以用napcat等支持websocket的onebot服务端工具来连接使用
 
+不知道命令是什么就试试/帮助
+
 虽然做的是一坨，但好歹能用不是（
