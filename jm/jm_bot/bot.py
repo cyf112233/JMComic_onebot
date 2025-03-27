@@ -6,35 +6,15 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-log_dir = os.path.join(script_dir, "log")
-os.makedirs(log_dir, exist_ok=True)
-current_datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_file = os.path.join(log_dir, f'bot_{current_datetime}.log')
-
-with open(log_file, 'a', encoding='utf-8') as f:
-    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - 程序启动\n")
-
-file_handler = RotatingFileHandler(
-    log_file,
-    maxBytes=10*1024*1024,
-    backupCount=5,
-    encoding='utf-8'
-)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
 
 def install_package(package: str):
-    logger.info(f"正在安装 {package}...")
+    print(f"正在安装 {package}...")
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package])
-        logger.info(f"{package} 安装成功")
+        print(f"{package} 安装成功")
         return True
     except subprocess.CalledProcessError as e:
-        logger.error(f"安装 {package} 失败: {e}")
+        print(f"安装 {package} 失败: {e}")
         return False
 
 def check_and_install_dependencies():
@@ -50,17 +30,17 @@ def check_and_install_dependencies():
     for package, import_name in required_packages.items():
         try:
             __import__(import_name)
-            logger.info(f"已安装 {package}")
+            print(f"已安装 {package}")
         except ImportError:
-            logger.warning(f"缺少依赖: {package}")
+            print(f"缺少依赖: {package}")
             if not install_package(package):
-                logger.error(f"无法安装 {package}，请手动安装")
+                print(f"无法安装 {package}，请手动安装")
                 continue
             try:
                 __import__(import_name)
-                logger.info(f"已成功导入 {package}")
+                print(f"已成功导入 {package}")
             except ImportError as e:
-                logger.error(f"导入 {package} 失败: {e}")
+                print(f"导入 {package} 失败: {e}")
                 continue
 
 check_and_install_dependencies()
@@ -86,10 +66,28 @@ import aiohttp
 import tempfile
 from PIL import Image
 
+def load_config() -> dict:
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(script_dir, "config.yml")
+        if not os.path.exists(config_path):
+            print(f"配置文件不存在: {config_path}")
+            return {}
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+            print("配置文件加载成功")
+            return config
+    except Exception as e:
+        print(f"加载配置文件失败: {e}")
+        return {}
+
+# 先加载配置
+CONFIG = load_config()
+
 class ConsoleClearHandler(logging.StreamHandler):
-    def __init__(self, max_lines=1000):
+    def __init__(self, max_lines=None):
         super().__init__()
-        self.max_lines = max_lines
+        self.max_lines = max_lines or CONFIG.get('console', {}).get('max_lines', 1000)
         self.line_count = 0
         
     def emit(self, record):
@@ -100,56 +98,55 @@ class ConsoleClearHandler(logging.StreamHandler):
             
             self.line_count += 1
             if self.line_count >= self.max_lines:
+                # 清屏
                 os.system('cls' if os.name == 'nt' else 'clear')
+                # 重置计数器
                 self.line_count = 0
+                # 重新显示最后一条日志
+                self.stream.write(msg + self.terminator)
+                self.flush()
         except Exception:
             self.handleError(record)
 
-os.makedirs("log", exist_ok=True)
-
-current_datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_file = f'log/bot_{current_datetime}.log'
-
-with open(log_file, 'a', encoding='utf-8') as f:
-    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - 程序启动\n")
-
-file_handler = RotatingFileHandler(
-    log_file,
-    maxBytes=10*1024*1024,
-    backupCount=5,
-    encoding='utf-8'
-)
-console_handler = ConsoleClearHandler(max_lines=1000)
-
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
+# 初始化日志系统
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
+
+# 创建格式化器
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# 根据配置决定是否输出到文件
+if CONFIG.get('log', {}).get('file_output', True):
+    log_dir = os.path.join(script_dir, "log")
+    os.makedirs(log_dir, exist_ok=True)
+    current_datetime = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    log_file = os.path.join(log_dir, f'bot_{current_datetime}.log')
+    
+    with open(log_file, 'a', encoding='utf-8') as f:
+        f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - INFO - 程序启动\n")
+    
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=10*1024*1024,
+        backupCount=5,
+        encoding='utf-8'
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    print(f"日志文件输出已启用，日志文件保存在: {log_file}")
+else:
+    print("日志文件输出已禁用，仅输出到控制台")
+
+# 添加控制台处理器
+console_handler = ConsoleClearHandler()
+console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 logger.info("日志系统初始化完成")
 
-def cleanup_old_logs():
-    # 移除清理日志文件的功能
-    pass
-
-def load_config() -> dict:
-    try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(script_dir, "config.yml")
-        if not os.path.exists(config_path):
-            logger.warning(f"配置文件不存在: {config_path}")
-            return {}
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
-            logger.info("配置文件加载成功")
-            return config
-    except Exception as e:
-        logger.error(f"加载配置文件失败: {e}")
-        return {}
+# 创建配置对象
+option = jmcomic.create_option_by_file('jm-option.yml')
+logger.info("已加载JM下载配置")
 
 def load_enabled_groups() -> Set[int]:
     try:
@@ -604,6 +601,9 @@ async def handle_message(request):
                     logger.info("PDF文件上传成功")
                     await send_group_message(group_id, f"JM{jm_id}发送完成！")
                     await cleanup_user_files(user_id, jm_id)
+                    # 清理控制台日志
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    logger.info(f"JM{jm_id}发送完成，已清理控制台日志")
                 else:
                     logger.error("PDF文件上传失败")
                     await send_group_message(group_id, f"JM{jm_id}上传失败：上传请求失败。")
@@ -622,9 +622,13 @@ async def handle_message(request):
                     os.chdir(user_download_dir)
                     logger.info(f"切换到用户下载目录: {user_download_dir}")
                     
-                    option = JmOption.default()
-                    downloader = JmDownloader(option)
-                    downloader.download_album(jm_id)
+                    # 使用配置文件创建下载选项
+                    option = jmcomic.create_option_by_file('jm-option.yml')
+                    logger.info("已加载JM下载配置")
+                    
+                    # 使用配置选项下载
+                    jmcomic.download_album(jm_id, option)
+                    logger.info(f"JM{jm_id}下载完成")
                     
                     zip_path = os.path.join(original_dir, ZIP_DIR, f"{jm_id}.zip")
                     inner_zip_path = os.path.join(original_dir, ZIP_DIR, f"{jm_id}_inner.zip")
@@ -943,6 +947,9 @@ async def handle_message_data(data: dict):
                     logger.info("PDF文件上传成功")
                     await send_group_message(group_id, f"JM{jm_id}发送完成！")
                     await cleanup_user_files(user_id, jm_id)
+                    # 清理控制台日志
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    logger.info(f"JM{jm_id}发送完成，已清理控制台日志")
                 else:
                     logger.error("PDF文件上传失败")
                     await send_group_message(group_id, f"JM{jm_id}上传失败：上传请求失败。")
@@ -961,9 +968,13 @@ async def handle_message_data(data: dict):
                     os.chdir(user_download_dir)
                     logger.info(f"切换到用户下载目录: {user_download_dir}")
                     
-                    option = JmOption.default()
-                    downloader = JmDownloader(option)
-                    downloader.download_album(jm_id)
+                    # 使用配置文件创建下载选项
+                    option = jmcomic.create_option_by_file('jm-option.yml')
+                    logger.info("已加载JM下载配置")
+                    
+                    # 使用配置选项下载
+                    jmcomic.download_album(jm_id, option)
+                    logger.info(f"JM{jm_id}下载完成")
                     
                     zip_path = os.path.join(original_dir, ZIP_DIR, f"{jm_id}.zip")
                     inner_zip_path = os.path.join(original_dir, ZIP_DIR, f"{jm_id}_inner.zip")

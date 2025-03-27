@@ -1,26 +1,36 @@
 # 管理员配置
 admin:
-  qq_numbers: [12345678]  # 管理员QQ号列表
+  qq_numbers: [1450595984]  # 管理员QQ号列表
 
 # 下载配置
 download:
   cooldown: 60  # 下载冷却时间（秒）
 
-# 文件配置
+# zip发送时文件配置
 files:
   max_zip_size: 100  # 最大ZIP文件大小（MB）
   password: "123456"  # ZIP文件密码
 
 # PDF配置
 pdf:
-  enabled: true  # 是否启用PDF功能
+  enabled: true  # 是否启用PDF发送而不是zip
 
 # 清理配置
 cleanup:
-  interval: 3600  # 清理间隔（秒）
+  interval: 600  # 清理间隔（秒）
 
 # go-cqhttp配置
 onebot:
   host: "127.0.0.1"  # go-cqhttp服务器地址
   port: 5700  # go-cqhttp服务器端口
-  access_token: ""  # go-cqhttp访问令牌 
+  access_token: ""  # go-cqhttp访问令牌
+
+# 控制台配置
+console:
+  max_lines: 1000  # 控制台显示的最大行数，超过后自动清屏
+
+# 日志配置
+log:
+  file_output: true  # 是否输出到日志文件
+
+# 其他配置保持不变 
