@@ -375,14 +375,25 @@ async def download_pdf(jm_id: str, user_id: str) -> Optional[str]:
             os.makedirs(user_download_dir)
             
         original_dir = os.getcwd()
+        pdf_path = None  # 初始化pdf_path变量
         
         try:
             os.chdir(user_download_dir)
             logger.info(f"切换到用户下载目录: {user_download_dir}")
             
-            loadConfig = JmOption.default()
+            # 使用绝对路径加载配置文件
+            option_path = os.path.join(original_dir, 'jm-option.yml')
+            if not os.path.exists(option_path):
+                logger.error(f"配置文件不存在: {option_path}")
+                return None
+                
+            # 使用配置文件创建下载选项
+            option = jmcomic.create_option_by_file(option_path)
+            logger.info("已加载JM下载配置")
             
-            jmcomic.download_album(jm_id, loadConfig)
+            # 使用配置选项下载
+            jmcomic.download_album(jm_id, option)
+            logger.info(f"JM{jm_id}下载完成")
             
             def find_image_dir(current_dir):
                 for root, dirs, files in os.walk(current_dir):
@@ -414,7 +425,7 @@ async def download_pdf(jm_id: str, user_id: str) -> Optional[str]:
                 
         except Exception as e:
             logger.error(f"PDF下载失败: {e}")
-            if os.path.exists(pdf_path):
+            if pdf_path and os.path.exists(pdf_path):
                 try:
                     os.remove(pdf_path)
                 except Exception as e:
@@ -423,7 +434,7 @@ async def download_pdf(jm_id: str, user_id: str) -> Optional[str]:
             
     except Exception as e:
         logger.error(f"PDF下载失败: {e}")
-        if os.path.exists(pdf_path):
+        if pdf_path and os.path.exists(pdf_path):
             try:
                 os.remove(pdf_path)
             except Exception as e:
