@@ -2,8 +2,8 @@
 # 此文件用于配置JMComic的下载行为
 # 可以根据需要添加配置项 
 # 如何修改配置请看 https://jmcomic.readthedocs.io/zh-cn/latest/option_file_syntax/
-# 重要提醒，打包zip和pdf已内置在机器人中，不要添加相关配置，否则可能出现未知错误
-# 重要提醒2，下载路径有机器人处理不要添加相关配置或修改！！！
+# 重要提醒，有一部分功能以及内置在机器人中（详情查看配置文件），不要添加相关配置，否则可能出现未知错误
+# 重要提醒2，下载路径由机器人处理不要添加相关配置或修改！！！
 # 配置客户端相关
 client:
   # impl: 客户端实现类，不配置默认会使用JmModuleConfig.DEFAULT_CLIENT_IMPL
