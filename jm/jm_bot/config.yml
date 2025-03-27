@@ -1,6 +1,6 @@
 # 管理员配置
 admin:
-  qq_numbers: [1450595984]  # 管理员QQ号列表
+  qq_numbers: [12345678]  # 管理员QQ号列表
 
 # 下载配置
 download:
@@ -32,5 +32,3 @@ console:
 # 日志配置
 log:
   file_output: true  # 是否输出到日志文件
-
-# 其他配置保持不变 
